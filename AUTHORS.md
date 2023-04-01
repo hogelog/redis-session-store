@@ -20,6 +20,7 @@ Redis Session Store authors
 - Olle Jonsson
 - Nicolas Rodriguez
 - Sergey Nebolsin
+- Sunao Komuro
 - Anton Kolodii
 - Peter Karman
 - Zach Margolis

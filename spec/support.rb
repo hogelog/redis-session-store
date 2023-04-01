@@ -7,19 +7,6 @@ unless defined?(Rack::Session::Abstract::ENV_SESSION_OPTIONS_KEY)
     end
   end
 end
-unless defined?(Rack::Session::SessionId)
-  module Rack
-    module Session
-      class SessionId
-        attr_reader :public_id
-
-        def initialize(_public_id)
-          @public_id
-        end
-      end
-    end
-  end
-end
 
 unless defined?(ActionDispatch::Session::AbstractSecureStore)
   module ActionDispatch

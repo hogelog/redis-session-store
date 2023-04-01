@@ -3,6 +3,11 @@
 **ATTN**: This project uses [semantic versioning](http://semver.org/).
 
 ## [Unreleased]
+### Fixed
+- Use Rack::Session:SessionID for security fix
+
+### Changed
+- Drop support for rack < 2.0.8
 
 # [0.11.5] - 2022-11-27
 

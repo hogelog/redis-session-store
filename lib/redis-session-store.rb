@@ -1,3 +1,4 @@
+require 'rack/session/abstract/id'
 require 'redis'
 
 # Redis session storage for Rails, and for Rails only. Derived from
@@ -61,11 +62,11 @@ class RedisSessionStore < ActionDispatch::Session::AbstractSecureStore
   # user HAS session id, but it already expired, or is invalid for some
   # other reason, and session was accessed only for reading.
   def session_exists?(env)
-    value = current_session_id(env)
+    sid = current_session_id(env)
 
     !!(
-      value && !value.empty? &&
-      key_exists?(value)
+      sid && !sid.empty? &&
+      (key_exists?(sid.private_id) || key_exists?(sid.public_id))
     )
   rescue Errno::ECONNREFUSED, Redis::CannotConnectError => e
     on_redis_down.call(e, env, value) if on_redis_down
@@ -100,7 +101,9 @@ class RedisSessionStore < ActionDispatch::Session::AbstractSecureStore
   end
 
   def get_session(env, sid)
-    sid && (session = load_session_from_redis(sid)) ? [sid, session] : session_default_values
+    return session_default_values unless sid
+    session = load_session_from_redis(sid.private_id) || load_session_from_redis(sid.public_id)
+    session ? [sid, session] : session_default_values
   rescue Errno::ECONNREFUSED, Redis::CannotConnectError => e
     on_redis_down.call(e, env, sid) if on_redis_down
     session_default_values
@@ -126,9 +129,9 @@ class RedisSessionStore < ActionDispatch::Session::AbstractSecureStore
   def set_session(env, sid, session_data, options = nil)
     expiry = get_expiry(env, options)
     if expiry
-      redis.setex(prefixed(sid), expiry, encode(session_data))
+      redis.setex(prefixed(sid.private_id), expiry, encode(session_data))
     else
-      redis.set(prefixed(sid), encode(session_data))
+      redis.set(prefixed(sid.private_id), encode(session_data))
     end
     sid
   rescue Errno::ECONNREFUSED, Redis::CannotConnectError => e
@@ -147,7 +150,9 @@ class RedisSessionStore < ActionDispatch::Session::AbstractSecureStore
   end
 
   def destroy_session(env, sid, options)
-    destroy_session_from_sid(sid, (options || {}).to_hash.merge(env: env))
+    destroy_options = (options || {}).to_hash.merge(env: env)
+    destroy_session_from_sid(sid.public_id, destroy_options)
+    destroy_session_from_sid(sid.private_id, destroy_options)
   end
   alias delete_session destroy_session
 
