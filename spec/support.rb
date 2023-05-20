@@ -1,43 +1,10 @@
+require "rack/session/abstract/id"
+
 unless defined?(Rack::Session::Abstract::ENV_SESSION_OPTIONS_KEY)
   module Rack
     module Session
       module Abstract
         ENV_SESSION_OPTIONS_KEY = 'rack.session.options'.freeze
-      end
-    end
-  end
-end
-unless defined?(Rack::Session::SessionId)
-  module Rack
-    module Session
-      class SessionId
-        ID_VERSION = 2
-
-        attr_reader :public_id
-
-        def initialize(public_id)
-          @public_id = public_id
-        end
-
-        alias to_s public_id
-
-        def empty?
-          false
-        end
-
-        def inspect
-          public_id.inspect
-        end
-
-        def private_id
-          "#{ID_VERSION}::#{hash_sid(public_id)}"
-        end
-
-        private
-
-        def hash_sid(value)
-          "test_hash_from:#{value}"
-        end
       end
     end
   end
@@ -71,16 +38,6 @@ unless defined?(ActionDispatch::Session::AbstractSecureStore)
           Rack::Session::SessionId.new(rand(999..9999).to_s(16))
         end
       end
-    end
-  end
-end
-
-unless defined?(Rails)
-  require 'logger'
-
-  module Rails
-    def self.logger
-      @logger ||= Logger.new('/dev/null')
     end
   end
 end
